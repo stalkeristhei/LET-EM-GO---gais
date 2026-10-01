@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Map, Store, Utensils, TreePine, TramFront, HeartPulse, Lightbulb, Workflow } from 'lucide-react';
 import { SuggestionItem } from '../types';
 
 interface SuggestScreenProps {
@@ -21,13 +22,13 @@ export const SuggestScreen: React.FC<SuggestScreenProps> = ({
   const [isDictating, setIsDictating] = useState<boolean>(false);
 
   const categories = [
-    { id: 'Travel', icon: '🗺️', label: 'Travel' },
-    { id: 'Stores', icon: '🏪', label: 'Stores' },
-    { id: 'Restaurants', icon: '🍽️', label: 'Restaurants' },
-    { id: 'Parks', icon: '🌳', label: 'Parks' },
-    { id: 'Transit', icon: '🚆', label: 'Transit' },
-    { id: 'Healthcare', icon: '🏥', label: 'Healthcare' },
-    { id: 'Platform', icon: '💡', label: 'Platform' },
+    { id: 'Travel', icon: Map, label: 'Travel' },
+    { id: 'Stores', icon: Store, label: 'Stores' },
+    { id: 'Restaurants', icon: Utensils, label: 'Restaurants' },
+    { id: 'Parks', icon: TreePine, label: 'Parks' },
+    { id: 'Transit', icon: TramFront, label: 'Transit' },
+    { id: 'Healthcare', icon: HeartPulse, label: 'Healthcare' },
+    { id: 'Platform', icon: Lightbulb, label: 'Platform' },
   ];
 
   const helperTags = ['Slope grade %', 'Restroom clearance', 'Acoustic level', 'Tactile paving'];
@@ -129,9 +130,9 @@ export const SuggestScreen: React.FC<SuggestScreenProps> = ({
         <div className="flex flex-col gap-1.5">
           <label className="text-[13px] font-bold text-[#111c2d]">Select Category</label>
           <div
-            role="radiogroup"
+            role="group"
             aria-label="Suggestion category"
-            className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar -mx-2 px-2"
+            className="flex flex-wrap gap-2 pb-1"
           >
             {categories.map((cat) => {
               const isSelected = selectedCategory === cat.id;
@@ -139,7 +140,7 @@ export const SuggestScreen: React.FC<SuggestScreenProps> = ({
                 <button
                   key={cat.id}
                   type="button"
-                  aria-checked={isSelected}
+                  aria-pressed={isSelected}
                   onClick={() => setSelectedCategory(cat.id)}
                   className={`min-h-[44px] px-3.5 py-1.5 rounded-full font-bold text-[13px] flex items-center gap-1.5 shrink-0 transition-all border ${
                     isSelected
@@ -147,7 +148,7 @@ export const SuggestScreen: React.FC<SuggestScreenProps> = ({
                       : 'bg-[#f0f3ff] text-[#3f4850] border-[#cfdaf2] hover:bg-[#dee8ff]'
                   }`}
                 >
-                  <span>{cat.icon}</span>
+                  <cat.icon size={17} aria-hidden="true"/>
                   <span>{cat.label}</span>
                 </button>
               );
@@ -232,11 +233,9 @@ export const SuggestScreen: React.FC<SuggestScreenProps> = ({
 
       {/* 3. Community Co-Creation Pipeline Tracker */}
       <section className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[#006c4a] text-[24px]">
-              published_with_changes
-            </span>
+            <Workflow size={24} className="text-[#006c4a]" aria-hidden="true"/>
             <h3 className="text-[17px] font-bold text-[#111c2d]">Community Co-Creation</h3>
           </div>
           <span className="text-[12px] text-[#006194] font-bold uppercase tracking-wider">
@@ -258,7 +257,7 @@ export const SuggestScreen: React.FC<SuggestScreenProps> = ({
                 key={item.id}
                 className="bg-white rounded-2xl p-4 shadow-sm border border-[#cfdaf2] flex flex-col gap-2.5"
               >
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start justify-between flex-wrap gap-2">
                   <div
                     className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold text-[11px] ${
                       isInDev
