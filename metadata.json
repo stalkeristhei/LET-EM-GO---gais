@@ -1,0 +1,7 @@
+{
+  "name": "LET 'EM GO: Accessibility First",
+  "description": "High-contrast inclusive mobility and accessible navigation app with community-verified routing, solo vs PA assistance matrices, and real-time obstacle alerts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
