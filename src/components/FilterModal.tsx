@@ -1,5 +1,6 @@
 import React from 'react';
 import { UserProfileData, CompanionMode } from '../types';
+import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 
 interface FilterModalProps {
   isOpen: boolean;
@@ -8,6 +9,8 @@ interface FilterModalProps {
   onUpdateProfile: (updated: Partial<UserProfileData>) => void;
   companionMode: CompanionMode;
   onToggleCompanionMode: (mode: CompanionMode) => void;
+  textScale: string;
+  onTextScaleChange: (value: string) => void;
 }
 
 export const FilterModal: React.FC<FilterModalProps> = ({
@@ -17,15 +20,19 @@ export const FilterModal: React.FC<FilterModalProps> = ({
   onUpdateProfile,
   companionMode,
   onToggleCompanionMode,
+  textScale,
+  onTextScaleChange,
 }) => {
+  const dialogRef = useAccessibleDialog(isOpen, onClose);
   if (!isOpen) return null;
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="filter-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#111c2d]/70 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#111c2d]/70 backdrop-blur-sm animate-fadeIn"
     >
       <div className="w-full max-w-lg bg-[#ffffff] rounded-2xl shadow-2xl border border-[#cfdaf2] overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
@@ -33,7 +40,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[#006194] text-[24px]">tune</span>
             <h2 id="filter-modal-title" className="text-[18px] font-bold text-[#111c2d]">
-              Accessibility Filter Criteria
+              Your access needs
             </h2>
           </div>
           <button
@@ -51,12 +58,13 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           {/* Active Companion Mode Switch */}
           <div className="bg-[#f0f3ff] p-3.5 rounded-xl">
             <label className="text-[13px] font-bold text-[#111c2d] block mb-2">
-              Routing Travel Companion Mode
+              How are you travelling?
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => onToggleCompanionMode('solo')}
+                aria-pressed={companionMode === 'solo'}
                 className={`py-2 px-3 rounded-xl font-bold text-[13px] flex items-center justify-center gap-2 border transition-all ${
                   companionMode === 'solo'
                     ? 'bg-[#263143] text-white border-[#263143] shadow-sm'
@@ -64,11 +72,12 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 }`}
               >
                 <span className="material-symbols-outlined text-[18px]">person</span>
-                <span>Solo Autonomous</span>
+                <span>Solo</span>
               </button>
               <button
                 type="button"
                 onClick={() => onToggleCompanionMode('pa')}
+                aria-pressed={companionMode === 'pa'}
                 className={`py-2 px-3 rounded-xl font-bold text-[13px] flex items-center justify-center gap-2 border transition-all ${
                   companionMode === 'pa'
                     ? 'bg-[#263143] text-white border-[#263143] shadow-sm'
@@ -76,13 +85,11 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 }`}
               >
                 <span className="material-symbols-outlined text-[18px]">group</span>
-                <span>PA Accompanied</span>
+                <span>With companion</span>
               </button>
             </div>
             <p className="text-[11px] text-[#3f4850] mt-2">
-              {companionMode === 'solo'
-                ? 'Strictly step-free with 0% slope assistance required, auto doors, level turns.'
-                : 'Permits slopes up to 8% with assistant support, manual doors with companion push.'}
+              Your travel mode changes the mobility reports used for match badges. Your slope and doorway limits still apply.
             </p>
           </div>
 
@@ -96,6 +103,8 @@ export const FilterModal: React.FC<FilterModalProps> = ({
             </div>
             <input
               type="range"
+              aria-label="Maximum slope in percent grade"
+              aria-valuetext={`${userProfile.maxSlopeTolerance} percent grade`}
               min="0"
               max="10"
               step="1"
@@ -105,7 +114,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
             />
             <div className="flex justify-between text-[11px] text-[#707881]">
               <span>0% (Flat only)</span>
-              <span>5% (ADA standard)</span>
+              <span>5% (Gentle)</span>
               <span>10% (Steep)</span>
             </div>
           </div>
@@ -118,12 +127,13 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 {userProfile.minDoorWidth} cm
               </span>
             </div>
-            <div className="grid grid-cols-4 gap-2">
-              {[75, 80, 90, 100].map((width) => (
+            <div className="grid grid-cols-5 gap-2">
+              {[75, 80, 85, 90, 100].map((width) => (
                 <button
                   key={width}
                   type="button"
                   onClick={() => onUpdateProfile({ minDoorWidth: width })}
+                  aria-pressed={userProfile.minDoorWidth === width}
                   className={`py-2 rounded-lg font-bold text-[12px] border ${
                     userProfile.minDoorWidth === width
                       ? 'bg-[#006194] text-white border-[#006194]'
@@ -143,7 +153,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 <span className="material-symbols-outlined text-[#006194] text-[20px]">
                   accessible_forward
                 </span>
-                <span className="text-[13px] font-bold text-[#111c2d]">Zero-Step Guarantee</span>
+                <span className="text-[13px] font-bold text-[#111c2d]">Prefer step-free entrances</span>
               </div>
               <input
                 type="checkbox"
@@ -193,6 +203,12 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               />
             </label>
           </div>
+          <div className="display-settings">
+            <label htmlFor="text-size">Text size</label>
+            <select id="text-size" value={textScale} onChange={event => onTextScaleChange(event.target.value)}><option value="100">Standard · 100%</option><option value="112.5">Large · 112.5%</option><option value="125">Extra large · 125%</option></select>
+            <label className="need-option"><input type="checkbox" checked={userProfile.highContrast} onChange={event => onUpdateProfile({ highContrast: event.target.checked })}/><span><strong>High contrast</strong><small>Stronger borders and clearer text</small></span></label>
+            <p className="muted">Changes apply immediately and last for this session. Unconfirmed features remain visible for you to check.</p>
+          </div>
         </div>
 
         {/* Footer */}
@@ -217,7 +233,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
             onClick={onClose}
             className="min-h-[44px] px-5 py-2 rounded-xl bg-[#006194] text-white font-bold text-[14px] hover:bg-[#007bb9] active:scale-98 transition-all"
           >
-            Apply Filters
+            Done
           </button>
         </div>
       </div>
