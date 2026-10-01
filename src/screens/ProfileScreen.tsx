@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Accessibility, Armchair, Bike, PersonStanding, Eye } from 'lucide-react';
 import { UserProfileData } from '../types';
 
 interface ProfileScreenProps {
@@ -18,11 +17,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [companionPhoneInput, setCompanionPhoneInput] = useState(userProfile.companionPhone);
 
   const mobilityOptions = [
-    { id: 'Powerchair (Quickie Q500)', icon: Accessibility, label: 'Powerchair' },
-    { id: 'Manual Wheelchair', icon: Armchair, label: 'Manual Chair' },
-    { id: 'Mobility Scooter', icon: Bike, label: 'Scooter' },
-    { id: 'Walking Frame / Crutches', icon: PersonStanding, label: 'Frame / Crutches' },
-    { id: 'Guide Dog / White Cane', icon: Eye, label: 'Visual Guide' },
+    { id: 'Powerchair (Quickie Q500)', icon: 'accessible_forward', label: 'Powerchair' },
+    { id: 'Manual Wheelchair', icon: 'accessible', label: 'Manual Chair' },
+    { id: 'Mobility Scooter', icon: 'electric_scooter', label: 'Scooter' },
+    { id: 'Walking Frame / Crutches', icon: 'elderly', label: 'Frame / Crutches' },
+    { id: 'Guide Dog / White Cane', icon: 'blind', label: 'Visual Guide' },
   ];
 
   const handleSaveCompanion = () => {
@@ -83,12 +82,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
         <div className="grid grid-cols-2 gap-2">
           {mobilityOptions.map((opt) => {
-            const isSelected = userProfile.mobilityType === opt.id;
+            const isSelected = userProfile.mobilityType.includes(opt.label);
             return (
               <button
                 key={opt.id}
                 type="button"
-                aria-pressed={isSelected}
                 onClick={() => {
                   onUpdateProfile({ mobilityType: opt.id });
                   onShowToast(`Equipment set to: ${opt.label}`, 'check');
@@ -99,8 +97,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
                     : 'bg-[#f0f3ff] border-[#cfdaf2] text-[#3f4850] hover:bg-[#dee8ff]'
                 }`}
               >
-                <opt.icon size={22} aria-hidden="true"/>
-                <span className="text-[13px] leading-tight">{opt.label}</span>
+                <span className="material-symbols-outlined text-[22px] shrink-0 select-none">
+                  {opt.icon}
+                </span>
+                <span className="text-[13px] leading-tight truncate">{opt.label}</span>
               </button>
             );
           })}
@@ -124,17 +124,15 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </div>
           <input
             type="range"
-            aria-label="Maximum slope in percent grade"
-            aria-valuetext={`${userProfile.maxSlopeTolerance} percent grade`}
-            min="0"
-            max="10"
+            min="2"
+            max="8"
             step="1"
             value={userProfile.maxSlopeTolerance}
             onChange={(e) => onUpdateProfile({ maxSlopeTolerance: parseInt(e.target.value) })}
             className="w-full accent-[#006194] cursor-pointer"
           />
           <p className="text-[11px] text-[#707881]">
-            Mobility badges flag reported slopes above this limit. Preferences apply to this session.
+            Routes exceeding this slope will require personal assistant confirmation.
           </p>
         </div>
 

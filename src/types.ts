@@ -2,6 +2,8 @@ export type CompanionMode = 'solo' | 'pa';
 
 export type TabType = 'explore' | 'routes' | 'suggest' | 'community' | 'profile';
 
+export type GoaRegion = 'panjim' | 'porvorim' | 'mapusa';
+
 export interface LocationSpot {
   id: string;
   name: string;
@@ -15,6 +17,7 @@ export interface LocationSpot {
   coords: { x: number; y: number }; // percentage on map
   markerType: 'safe' | 'parking' | 'warning' | 'hazard';
   badgeLabel?: string;
+  region: GoaRegion;
   soloEvaluation: {
     status: 'Accessible' | 'Caution' | 'Barred';
     details: string;
@@ -41,6 +44,7 @@ export interface SuggestionItem {
   impactNote?: string;
   author?: string;
   timestamp?: string;
+  region?: GoaRegion;
 }
 
 export interface UserBadge {
@@ -61,6 +65,7 @@ export interface UserProfileData {
   role: string;
   level: number;
   chapter: string;
+  currentRegion: GoaRegion;
   accessPoints: number;
   impactScore: number;
   locationsVerified: number;

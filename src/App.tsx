@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useRef, useState } from 'react';
-import { CompanionMode, TabType, LocationSpot, SuggestionItem } from './types';
+import React, { useState } from 'react';
+import { CompanionMode, TabType, LocationSpot, SuggestionItem, GoaRegion } from './types';
 import {
   INITIAL_USER_PROFILE,
   INITIAL_SPOTS,
@@ -24,13 +24,11 @@ import { ProfileScreen } from './screens/ProfileScreen';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<TabType>('explore');
+  const [currentRegion, setCurrentRegion] = useState<GoaRegion>('panjim');
   const [routesSubView, setRoutesSubView] = useState<'venue-detail' | 'live-nav'>('venue-detail');
   const [companionMode, setCompanionMode] = useState<CompanionMode>('solo');
   const [userProfile, setUserProfile] = useState(INITIAL_USER_PROFILE);
   const [spots] = useState<LocationSpot[]>(INITIAL_SPOTS);
-  const [selectedSpot, setSelectedSpot] = useState<LocationSpot>(INITIAL_SPOTS[0]);
-  const [textScale, setTextScale] = useState('100');
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [suggestions, setSuggestions] = useState<SuggestionItem[]>(INITIAL_SUGGESTIONS);
   const [badges] = useState(USER_BADGES);
 
@@ -44,30 +42,11 @@ export default function App() {
   });
 
   const showToast = (message: string, icon = 'verified') => {
-    if (toastTimer.current) clearTimeout(toastTimer.current);
     setToast({ visible: true, message, icon });
-    toastTimer.current = setTimeout(() => {
+    setTimeout(() => {
       setToast((prev) => ({ ...prev, visible: false }));
-    }, 6500);
+    }, 3800);
   };
-
-  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
-
-  useEffect(() => {
-    document.documentElement.style.fontSize = `${textScale}%`;
-    return () => { document.documentElement.style.fontSize = ''; };
-  }, [textScale]);
-
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    const focusTarget = currentTab === 'routes' && routesSubView === 'live-nav'
-      ? document.querySelector<HTMLElement>('.current-step h2, .arrival-panel h2')
-      : document.getElementById('main-content');
-    focusTarget?.focus({ preventScroll: true });
-    if (currentTab === 'routes' && routesSubView === 'live-nav' && window.matchMedia('(max-width: 699px)').matches) {
-      document.querySelector('.step-panel')?.scrollIntoView({ block: 'start', behavior: 'instant' });
-    }
-  }, [currentTab, routesSubView]);
 
   const addPoints = (points: number) => {
     setUserProfile((prev) => ({
@@ -81,21 +60,26 @@ export default function App() {
     setCompanionMode(updated);
     showToast(
       updated === 'solo'
-        ? 'Travelling solo. Mobility access badges updated.'
-        : 'Travelling with a companion. Mobility access badges updated.',
+        ? 'Solo Mode Active: Filtering for high-autonomy step-free access'
+        : 'PA Mode Active: Including companion-supported routes (up to 8° grade)',
       updated === 'solo' ? 'person' : 'group'
     );
   };
 
   const handleSelectPlaceForNav = (spot: LocationSpot) => {
-    setSelectedSpot(spot);
+    if (spot.region) {
+      setCurrentRegion(spot.region);
+    }
     setCurrentTab('routes');
     setRoutesSubView('live-nav');
-    showToast('Route preview opened. These are sample directions, not live navigation.', 'info');
+    showToast(`Accessible turn-by-turn routing initiated in ${spot.region?.toUpperCase() || 'GOA'}!`, 'navigation');
   };
 
   const handleViewVenueDetail = (spotId: string) => {
-    setSelectedSpot(spots.find(spot => spot.id === spotId) || spots[0]);
+    const spot = spots.find((s) => s.id === spotId);
+    if (spot?.region) {
+      setCurrentRegion(spot.region);
+    }
     setCurrentTab('routes');
     setRoutesSubView('venue-detail');
   };
@@ -121,7 +105,7 @@ export default function App() {
   };
 
   return (
-    <div className={`app-shell ${userProfile.highContrast ? 'high-contrast' : ''} ${currentTab === 'routes' && routesSubView === 'live-nav' ? 'route-active' : ''}`}>
+    <div className="min-h-screen bg-[#f9f9ff] text-[#111c2d] flex flex-col font-sans selection:bg-[#cce5ff]">
       {/* Header */}
       <Header
         currentTab={currentTab}
@@ -135,10 +119,15 @@ export default function App() {
       />
 
       {/* Main Content Areas */}
-      <main id="main-content" tabIndex={-1} className="app-main">
+      <main className="flex-1 w-full">
         {currentTab === 'explore' && (
           <ExploreScreen
             companionMode={companionMode}
+            currentRegion={currentRegion}
+            onChangeRegion={(reg) => {
+              setCurrentRegion(reg);
+              setUserProfile((prev) => ({ ...prev, currentRegion: reg }));
+            }}
             onToggleCompanionMode={() => handleToggleCompanionMode()}
             onOpenFilters={() => setFiltersOpen(true)}
             onSelectPlaceForNav={handleSelectPlaceForNav}
@@ -147,24 +136,21 @@ export default function App() {
             onAddPoints={addPoints}
             onGoToSuggest={() => setCurrentTab('suggest')}
             spots={spots}
-            userProfile={userProfile}
-            onUpdateProfile={(updated) => setUserProfile((prev) => ({ ...prev, ...updated }))}
           />
         )}
 
         {currentTab === 'routes' && (
           <RoutesScreen
-            key={selectedSpot.id}
             companionMode={companionMode}
+            currentRegion={currentRegion}
+            onChangeRegion={(reg) => {
+              setCurrentRegion(reg);
+              setUserProfile((prev) => ({ ...prev, currentRegion: reg }));
+            }}
             onToggleCompanionMode={handleToggleCompanionMode}
             onShowToast={showToast}
             onAddPoints={addPoints}
             initialSubView={routesSubView}
-            spot={selectedSpot}
-            userProfile={userProfile}
-            onChangeSubView={setRoutesSubView}
-            onOpenSos={() => setSosOpen(true)}
-            onGoToExplore={() => setCurrentTab('explore')}
           />
         )}
 
@@ -213,8 +199,9 @@ export default function App() {
         isOpen={sosOpen}
         onClose={() => setSosOpen(false)}
         userProfile={userProfile}
+        currentRegion={currentRegion}
         onTriggerHelp={(action) => {
-          showToast(action, 'sos');
+          showToast(`Emergency Alert Sent: ${action}`, 'sos');
         }}
       />
 
@@ -226,8 +213,6 @@ export default function App() {
         onUpdateProfile={(updated) => setUserProfile((prev) => ({ ...prev, ...updated }))}
         companionMode={companionMode}
         onToggleCompanionMode={handleToggleCompanionMode}
-        textScale={textScale}
-        onTextScaleChange={setTextScale}
       />
 
       {/* Global Toast Notification */}
